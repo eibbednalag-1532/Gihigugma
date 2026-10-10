@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Gihigugma — Local AI Research Assistant</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#composer-input">Skip to message composer</a>
+
+  <!-- ============ SIGN IN / CREATE ACCOUNT ============
+       Shown instead of the app until the server confirms a signed-in session. -->
+  <main class="auth" id="auth-screen" hidden>
+    <div class="auth__card">
+      <div class="brand auth__brand">
+        <span class="brand__mark" aria-hidden="true"><img src="logo.png" alt="" width="60" height="40" /></span>
+        <span class="brand__name">Gihigugma</span>
+      </div>
+      <p class="notice" id="auth-message" role="alert" hidden></p>
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab is-active" role="tab" aria-selected="true" data-auth-tab="login">Sign in</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-auth-tab="register">Create account</button>
+      </div>
+
+      <form class="dialog__form" id="login-form" novalidate>
+        <label class="field"><span>Username or email</span>
+          <input class="input" name="identifier" autocomplete="username" autocapitalize="none" spellcheck="false" required /></label>
+        <label class="field"><span>Password</span>
+          <input class="input" name="password" type="password" autocomplete="current-password" required /></label>
+        <p class="field__error" data-error="form" role="alert" hidden></p>
+        <button type="submit" class="btn btn--primary btn--block">Sign in</button>
+      </form>
+
+      <form class="dialog__form" id="register-form" novalidate hidden>
+        <label class="field"><span>Username</span>
+          <input class="input" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30" required />
+          <span class="field__error" data-error="username" hidden></span></label>
+        <label class="field"><span>Email address</span>
+          <input class="input" name="email" type="email" autocomplete="email" maxlength="254" required />
+          <span class="field__error" data-error="email" hidden></span></label>
+        <label class="field"><span>Password <em>at least 8 characters</em></span>
+          <input class="input" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required />
+          <span class="field__error" data-error="password" hidden></span></label>
+        <label class="field"><span>Confirm password</span>
+          <input class="input" name="confirm_password" type="password" autocomplete="new-password" maxlength="128" required />
+          <span class="field__error" data-error="confirm_password" hidden></span></label>
+        <p class="field__error" data-error="form" role="alert" hidden></p>
+        <button type="submit" class="btn btn--primary btn--block">Create account</button>
+      </form>
+
+      <p class="hint">Your account, chats and documents are stored on the computer running Gihigugma, not on this device and not online.</p>
+    </div>
+  </main>
+
+  <div class="app" id="app" hidden>
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <div class="sidebar__header">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true">
+            <img src="logo.png" alt="" width="46" height="30" />
+          </span>
+          <span class="brand__name">Gihigugma</span>
+        </div>
+        <button class="icon-btn sidebar__close" id="sidebar-close" aria-label="Close sidebar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </div>
+
+      <button class="btn btn--primary btn--block" id="new-chat-btn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        New chat
+      </button>
+
+      <nav class="nav" aria-label="Workspace sections">
+        <ul>
+          <li><button class="nav__item is-active" data-view="chat" aria-current="page">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z" /></svg>
+            <span>Chat</span>
+          </button></li>
+          <li><button class="nav__item" data-view="projects">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
+            <span>Projects</span>
+          </button></li>
+          <li><button class="nav__item" data-view="sources">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM10 4h4v16h-4zM15 5l3.5-1 3 15-3.5 1z" /></svg>
+            <span>Sources</span>
+          </button></li>
+          <li><button class="nav__item" data-view="findings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5" /></svg>
+            <span>Combined research</span>
+          </button></li>
+          <li><button class="nav__item" data-view="tools">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-4 9 4-9 4zM7 10v5c0 1.5 2.2 3 5 3s5-1.5 5-3v-5" /></svg>
+            <span>Research Tools</span>
+          </button></li>
+          <li><button class="nav__item" data-view="paraphrase">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 12h7M4 17h9M17 10l3 3-3 3M20 13h-6" /></svg>
+            <span>Paraphrase</span>
+          </button></li>
+          <li><button class="nav__item" data-view="counter">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M19 4v16M9 8h6M9 12h6M9 16h4" /></svg>
+            <span>Word Counter</span>
+          </button></li>
+          <li><button class="nav__item" data-view="memory">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6c0 2.5 1.5 3.6 2 5v3h8v-3c.5-1.4 2-2.5 2-5a6 6 0 0 0-6-6zM9 21h6" /></svg>
+            <span>Memory</span>
+          </button></li>
+          <li><button class="nav__item" data-view="collab">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="3" /><circle cx="17" cy="10" r="2.5" /><path d="M3 19c0-3 2.5-5 5-5s5 2 5 5M14 19c0-2.4 1.4-4 3-4s3.5 1.6 3.5 4" /></svg>
+            <span>Collaboration</span>
+          </button></li>
+        </ul>
+      </nav>
+
+      <section class="history" aria-labelledby="history-heading">
+        <div class="history__head">
+          <h2 id="history-heading">Chats</h2>
+          <label class="visually-hidden" for="history-search">Search chats and messages</label>
+          <input class="history__search" id="history-search" type="search" placeholder="Search chats and messages…" autocomplete="off" />
+          <label class="visually-hidden" for="history-range">Show chats from</label>
+          <select class="history__search" id="history-range">
+            <option value="0">Any time</option>
+            <option value="1">Today</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+          </select>
+        </div>
+        <ul class="history__list" id="history-list" role="list"></ul>
+      </section>
+
+      <footer class="sidebar__footer">
+        <div class="status" id="connection-status" role="status" aria-live="polite">
+          <span class="status__dot" aria-hidden="true"></span>
+          <span class="status__text">Checking…</span>
+        </div>
+        <div class="userbar">
+          <span class="userbar__name" id="user-name" title="Signed in"></span>
+          <button type="button" class="btn btn--small" id="logout-btn">Sign out</button>
+        </div>
+      </footer>
+    </aside>
+
+    <div class="scrim" id="scrim" hidden></div>
+
+    <!-- ============ MAIN WORKSPACE ============ -->
+    <main class="main" id="main">
+      <header class="topbar">
+        <button class="icon-btn topbar__menu" id="sidebar-open" aria-label="Open sidebar" aria-controls="sidebar" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+
+        <div class="topbar__title">
+          <h1 id="chat-title">New chat</h1>
+        </div>
+
+        <div class="topbar__actions">
+          <label class="visually-hidden" for="project-select">Research project</label>
+          <select class="select" id="project-select" title="Active research project" disabled>
+            <option value="">No project</option>
+          </select>
+          <div class="model-picker" id="model-picker" data-state="checking">
+            <span class="model-picker__dot" aria-hidden="true"></span>
+            <label class="visually-hidden" for="model-select">AI model</label>
+            <select class="select" id="model-select" disabled title="Installed Ollama models">
+              <option>Checking models…</option>
+            </select>
+            <button type="button" class="icon-btn model-picker__refresh" id="refresh-models" aria-label="Refresh models and connection">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" /></svg>
+            </button>
+          </div>
+          <span class="chip chip--offline" title="Gihigugma runs fully on this computer. Features needing internet will be labelled.">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+            Local only
+          </span>
+        </div>
+      </header>
+
+      <section class="chat" id="chat" aria-label="Conversation">
+        <!-- Empty state -->
+        <div class="welcome" id="welcome">
+          <img class="welcome__logo" src="logo.png" alt="" width="132" height="88" />
+          <h2>What are you researching today?</h2>
+          <p>Ask a question about your project's documents, or attach more. Answers come only from your files, and everything stays on this computer.</p>
+          <div class="suggestions" id="suggestions">
+            <button class="suggestion" data-prompt="Summarize the key arguments in my attached reading.">
+              <strong>Summarize a reading</strong><span>Pull out the key arguments</span>
+            </button>
+            <button class="suggestion" data-prompt="Explain this concept as if I'm new to the topic: ">
+              <strong>Explain a concept</strong><span>Step by step, plain language</span>
+            </button>
+            <button class="suggestion" data-prompt="Paraphrase this paragraph in a more academic tone: ">
+              <strong>Paraphrase text</strong><span>Keep the meaning, change the voice</span>
+            </button>
+            <button class="suggestion" data-prompt="Make me 5 practice questions on: ">
+              <strong>Make practice questions</strong><span>Quiz yourself on a topic</span>
+            </button>
+          </div>
+        </div>
+
+        <ol class="messages" id="messages" aria-live="polite" aria-relevant="additions"></ol>
+      </section>
+
+      <!-- ============ RESEARCH VIEWS (rendered by script.js) ============ -->
+      <section class="view" id="view-projects" aria-label="Research projects" hidden><div class="view__inner" id="projects-root"></div></section>
+      <section class="view" id="view-sources" aria-label="Sources" hidden><div class="view__inner" id="sources-root"></div></section>
+      <section class="view" id="view-findings" aria-label="Combined research" hidden><div class="view__inner" id="findings-root"></div></section>
+      <section class="view" id="view-tools" aria-label="Research tools" hidden><div class="view__inner" id="tools-root"></div></section>
+      <section class="view" id="view-paraphrase" aria-label="Paraphrase" hidden><div class="view__inner" id="paraphrase-root"></div></section>
+      <section class="view" id="view-counter" aria-label="Word counter" hidden><div class="view__inner" id="counter-root"></div></section>
+      <section class="view" id="view-memory" aria-label="Memory" hidden><div class="view__inner" id="memory-root"></div></section>
+      <section class="view" id="view-collab" aria-label="Collaboration" hidden><div class="view__inner" id="collab-root"></div></section>
+
+      <!-- ============ COMPOSER ============ -->
+      <form class="composer" id="composer" autocomplete="off">
+        <div class="composer__context">
+          <label class="visually-hidden" for="context-select">Answer using</label>
+          <div class="context-picker">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+            <select id="context-select" class="context-picker__select">
+              <option value="project">Project documents only</option>
+              <option value="none">General knowledge (not from documents)</option>
+              <option value="web" disabled>Website content — needs internet (later)</option>
+            </select>
+          </div>
+          <button type="button" class="chip chip--toggle" id="memory-toggle" hidden
+                  title="Whether saved memories may be used, and new ones suggested, in this chat"></button>
+          <ul class="attachments" id="attachments" aria-label="Attached files"></ul>
+        </div>
+
+        <div class="composer__box">
+          <button type="button" class="icon-btn" id="attach-btn" aria-label="Attach files">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5l-8.2 8.2a5 5 0 0 1-7-7L13 4.4a3.4 3.4 0 0 1 4.8 4.8l-8.3 8.3a1.7 1.7 0 0 1-2.4-2.4L14.5 7.7" /></svg>
+          </button>
+          <input type="file" id="file-input" multiple hidden
+                 accept=".pdf,.txt,.md,.docx,.csv,.json,.html,.htm" />
+
+          <label class="visually-hidden" for="composer-input">Message Gihigugma</label>
+          <textarea id="composer-input" rows="1" placeholder="Message Gihigugma…  (Shift+Enter for a new line)"></textarea>
+
+          <button type="submit" class="send-btn" id="send-btn" aria-label="Send message" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </button>
+        </div>
+
+        <div class="composer__meta">
+          <span id="word-count" aria-live="off">0 words · 0 characters</span>
+          <span class="composer__hint">Gihigugma can make mistakes. Check important facts against your sources.</span>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <!-- Drop overlay for drag-and-drop attachments -->
+  <div class="dropzone" id="dropzone" hidden aria-hidden="true">
+    <div class="dropzone__inner">Drop files to attach</div>
+  </div>
+
+  <!-- Project form -->
+  <dialog class="dialog" id="project-dialog" aria-labelledby="project-dialog-title">
+    <form class="dialog__form" id="project-form" autocomplete="off">
+      <h2 id="project-dialog-title">New research project</h2>
+      <label class="field"><span>Research topic or title</span>
+        <input class="input" id="pf-title" maxlength="200" required placeholder="Causes of flooding in Metro Manila" /></label>
+      <label class="field"><span>Objectives</span>
+        <textarea class="input" id="pf-objectives" rows="2" maxlength="4000" placeholder="What you want to find out"></textarea></label>
+      <label class="field"><span>Research questions <em>one per line</em></span>
+        <textarea class="input" id="pf-questions" rows="4" placeholder="What are the primary causes?&#10;What areas are most affected?"></textarea></label>
+      <label class="field"><span>Keywords and concepts <em>separated by commas</em></span>
+        <input class="input" id="pf-keywords" placeholder="drainage, land subsidence" /></label>
+      <label class="field"><span>Scope <em>optional</em></span>
+        <textarea class="input" id="pf-scope" rows="2" maxlength="4000" placeholder="Limits such as place, period, or sources"></textarea></label>
+      <div class="dialog__actions">
+        <button type="button" class="btn" id="pf-cancel">Cancel</button>
+        <button type="submit" class="btn btn--primary" id="pf-save">Save project</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- A single line of text: renaming a chat, editing a memory -->
+  <dialog class="dialog dialog--small" id="text-dialog" aria-labelledby="text-dialog-title">
+    <form class="dialog__form" id="text-form" autocomplete="off">
+      <h2 id="text-dialog-title"></h2>
+      <label class="field"><span id="text-dialog-label"></span>
+        <textarea class="input" id="text-dialog-input" rows="3" maxlength="400" required></textarea></label>
+      <div class="dialog__actions">
+        <button type="button" class="btn" id="text-dialog-cancel">Cancel</button>
+        <button type="submit" class="btn btn--primary" id="text-dialog-ok">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Confirmation -->
+  <dialog class="dialog dialog--small" id="confirm-dialog" aria-labelledby="confirm-title">
+    <h2 id="confirm-title"></h2>
+    <p id="confirm-text"></p>
+    <div class="dialog__actions">
+      <button type="button" class="btn" id="confirm-cancel">Cancel</button>
+      <button type="button" class="btn btn--danger" id="confirm-ok">Delete</button>
+    </div>
+  </dialog>
+
+  <!-- Toasts -->
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  <script src="textstats.js"></script>
+  <script src="script.js"></script>
+  <script src="modules.js"></script>
+</body>
+</html>
